@@ -1,0 +1,15 @@
+* { box-sizing: border-box; }
+body { margin: 0; background: #111; font: 1rem system-ui, sans-serif; }
+.artwork { position: relative; max-width: 1440px; margin: auto; }
+.artwork img { width: 100%; height: auto; display: block; }
+.hotspot { position: absolute; display: block; border-radius: .3rem; }
+.hotspot:focus-visible, nav a:focus-visible, summary:focus-visible { outline: 3px solid #ff7200; outline-offset: 2px; background: #ff720030; }
+.visually-hidden, .page-links:not(:focus-within) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+nav { display: flex; flex-wrap: wrap; gap: .5rem; padding: .75rem; }
+nav a, summary { color: white; padding: .45rem .65rem; }
+nav a[aria-current] { color: #ff9859; }
+.mobile-menu { display: none; }
+@media (max-width: 700px) {
+  .mobile-menu { display: block; position: sticky; bottom: 0; background: #151515; color: white; border-top: 2px solid #ff7200; }
+  .page-links { display: none; }
+}
