@@ -69,7 +69,11 @@ renderCart();
 document.querySelector('.cart-toggle').addEventListener('click', () => dialog.showModal());
 dialog.querySelector('.close-cart').addEventListener('click', () => dialog.close());
 document.querySelectorAll('[data-add]').forEach(button => {
-  button.addEventListener('click', () => addToCart(button.dataset.add, Number(button.dataset.price)));
+  button.addEventListener('click', () => {
+    const size = button.closest('.card')?.querySelector('.size-choice select');
+    const label = size ? button.dataset.add + ' · ' + size.selectedOptions[0].text.split(' · ')[0] : button.dataset.add;
+    addToCart(label, size ? Number(size.value) : Number(button.dataset.price));
+  });
 });
 
 const filters = document.querySelectorAll('[data-filter]');
@@ -83,32 +87,149 @@ filters.forEach(button => {
     });
   });
 });
+const menuResults = document.querySelector('#menu-results');
+document.querySelector('.sort-menu select')?.addEventListener('change', event => {
+  const sorted = Array.from(products);
+  if (event.target.value === 'name') {
+    sorted.sort((a, b) => a.querySelector('h3').textContent.localeCompare(b.querySelector('h3').textContent));
+  }
+  menuResults.append(...sorted);
+});
+document.querySelectorAll('[data-menu-category]').forEach(link => {
+  link.addEventListener('click', () => document.querySelector('[data-filter="' + link.dataset.menuCategory + '"]')?.click());
+});
+const menuEmpty = document.querySelector('.menu-empty');
+filters.forEach(button => {
+  button.addEventListener('click', () => {
+    if (menuEmpty) menuEmpty.hidden = Array.from(products).some(product => !product.hidden);
+  });
+});
+document.querySelectorAll('.favorite').forEach(button => {
+  const active = () => button.getAttribute('aria-pressed') === 'true';
+  const toggle = value => {
+    button.setAttribute('aria-pressed', String(value));
+    button.textContent = value ? '♥' : '♡';
+  };
+  const key = 'pizzaish-favorite:' + button.getAttribute('aria-label');
+  try { toggle(localStorage.getItem(key) === 'true'); } catch {}
+  button.addEventListener('click', () => {
+    toggle(!active());
+    try { localStorage.setItem(key, String(active())); } catch {}
+  });
+});
+document.querySelectorAll('[data-job]').forEach(link => {
+  link.addEventListener('click', () => {
+    const position = document.querySelector('#apply-now select');
+    if (position) position.value = link.dataset.job;
+  });
+});
+const slideButtons = document.querySelectorAll('[data-slide]');
+if (slideButtons.length) {
+  const hero = document.querySelector('.home-hero');
+  const photo = hero.querySelector('img');
+  const title = hero.querySelector('h1');
+  const copy = hero.querySelector('.hero-inner p');
+  const cta = hero.querySelector('.actions a');
+  const badge = hero.querySelector('.signature-badge');
+  const slides = [
+    ['home', 'Not Your<br>Ordinary Pizza.', 'Bold flavours. Signature pizzas.<br>Made for Toronto.', 'menu.html', 'Order Online →'],
+    ['build', 'Create Your<br><em>Perfect Pizza</em>', 'Pick your size, crust, sauce and favourite toppings.', 'build.html', 'Start Building →'],
+    ['wings', 'Bold Flavours.<br><em>Big Wings.</em>', 'Crispy, juicy wings tossed in our signature sauces.', 'wings.html', 'Order Wings →'],
+  ];
+  const ctaIcon = cta.querySelector('i');
+  slideButtons.forEach(button => button.addEventListener('click', () => {
+    const [asset, heading, description, href, label] = slides[Number(button.dataset.slide)];
+    photo.src = 'media/' + asset + '-hero.webp';
+    title.innerHTML = heading;
+    copy.innerHTML = description;
+    cta.replaceChildren(label, ctaIcon);
+    cta.href = href;
+    badge.hidden = asset !== 'home';
+    slideButtons.forEach(dot => dot.setAttribute('aria-pressed', String(dot === button)));
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      for (const element of [photo, title, copy]) element.animate([{ opacity: .48 }, { opacity: 1 }], 240);
+    }
+  }));
+}
 document.querySelectorAll('[data-config]').forEach(form => {
   const layout = form.closest('.configure');
   const summary = layout.querySelector('[data-selection]');
   const subtotal = layout.querySelector('[data-total]');
+  const submitTotal = layout.querySelector('[data-submit-total]');
+  const quantity = form.elements.namedItem('Order Quantity');
+  const secondFlavour = form.elements.namedItem('Second Flavour');
+  const flavours = form.elements.namedItem('Flavour Count');
+  const pizzaSizes = form.elements.namedItem('Size');
+  const wingSizes = form.elements.namedItem('Quantity');
+  const glutenFree = Array.from(form.elements).find(control => control.value === 'Gluten-Friendly');
+
   function selections() {
-    return Array.from(form.querySelectorAll('input:checked'));
+    const choices = [];
+    for (const control of form.elements) {
+      if (control.disabled || !control.name || control === quantity || control.name === 'Flavour Count') continue;
+      if (control.matches('input:checked')) {
+        choices.push({ group: control.name, value: control.value, cost: Number(control.dataset.cost || 0) });
+      }
+      if (control.tagName === 'SELECT' && control.value && !['Normal', 'No Upgrade'].includes(control.value)) {
+        choices.push({ group: control.name, value: control.value, cost: Number(control.selectedOptions[0].dataset.cost || 0) });
+      }
+    }
+    return choices;
+  }
+  function units() {
+    return quantity ? Math.min(20, Math.max(1, Number.parseInt(quantity.value, 10) || 1)) : 1;
   }
   function priceOf(choices) {
-    return choices.reduce((sum, item) => sum + Number(item.dataset.cost), 0);
+    return choices.reduce((sum, choice) => sum + Math.round(choice.cost * 100), 0) * units() / 100;
+  }
+  function syncOptions() {
+    if (secondFlavour) {
+      const dual = Array.from(flavours).find(control => control.value === '2');
+      dual.disabled = wingSizes.value === '6 Wings';
+      if (dual.disabled && dual.checked) flavours.value = '1';
+      secondFlavour.disabled = flavours.value !== '2';
+      secondFlavour.hidden = secondFlavour.disabled;
+      const firstFlavour = form.elements.namedItem('Flavour').value;
+      for (const option of secondFlavour.options) option.disabled = option.value === firstFlavour;
+      if (!secondFlavour.disabled && secondFlavour.value === firstFlavour) {
+        secondFlavour.value = Array.from(secondFlavour.options).find(option => !option.disabled).value;
+      }
+    }
+    if (glutenFree && pizzaSizes) {
+      glutenFree.disabled = pizzaSizes.value !== '14″ Medium';
+      if (glutenFree.disabled && glutenFree.checked) form.elements.namedItem('Crust').value = 'New York Thin';
+    }
   }
   function updateSummary() {
+    syncOptions();
     const choices = selections();
     summary.replaceChildren();
-    choices.forEach(choice => {
-      const item = document.createElement('li');
-      item.textContent = choice.value;
-      summary.append(item);
-    });
+    for (const choice of choices) {
+      const row = document.createElement('li');
+      const key = document.createElement('span');
+      const value = document.createElement('span');
+      key.textContent = choice.group + ':';
+      value.textContent = choice.value;
+      row.append(key, value);
+      summary.append(row);
+    }
     subtotal.textContent = money.format(priceOf(choices));
+    if (submitTotal) submitTotal.textContent = '– ' + subtotal.textContent;
   }
-  form.addEventListener('change', updateSummary);
+  layout.addEventListener('change', updateSummary);
+  quantity?.addEventListener('input', updateSummary);
+  layout.querySelectorAll('[data-quantity]').forEach(button => {
+    button.addEventListener('click', () => {
+      quantity.value = Math.min(20, Math.max(1, units() + Number(button.dataset.quantity)));
+      updateSummary();
+    });
+  });
   form.addEventListener('reset', () => setTimeout(updateSummary, 0));
   form.addEventListener('submit', event => {
     event.preventDefault();
     const choices = selections();
-    const name = form.dataset.config + ' · ' + choices.map(choice => choice.value).join(', ');
+    const prefix = units() > 1 ? units() + ' × ' : '';
+    const name = prefix + form.dataset.config + ' · ' + choices.map(choice => choice.value).join(', ');
     addToCart(name, priceOf(choices));
   });
   updateSummary();
