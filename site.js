@@ -71,7 +71,9 @@ dialog.querySelector('.close-cart').addEventListener('click', () => dialog.close
 document.querySelectorAll('[data-add]').forEach(button => {
   button.addEventListener('click', () => {
     const size = button.closest('.card')?.querySelector('.size-choice select');
-    const label = size ? button.dataset.add + ' · ' + size.selectedOptions[0].text.split(' · ')[0] : button.dataset.add;
+    const topping = button.closest('.card')?.querySelector('.side-options input:checked');
+    const options = size ? size.selectedOptions[0].text.split(' · ')[0] : topping?.value;
+    const label = options ? button.dataset.add + ' · ' + options : button.dataset.add;
     addToCart(label, size ? Number(size.value) : Number(button.dataset.price));
   });
 });
