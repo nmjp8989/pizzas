@@ -1,8 +1,22 @@
-const mobileToggle = document.querySelector('.mobile-toggle');
+const mobileToggles = document.querySelectorAll('.mobile-toggle');
 const navigation = document.querySelector('#navigation');
-mobileToggle.addEventListener('click', () => {
-  const open = navigation.classList.toggle('visible');
-  mobileToggle.setAttribute('aria-expanded', String(open));
+function setNavigation(open) {
+  navigation.classList.toggle('visible', open);
+  mobileToggles.forEach(toggle => {
+    toggle.setAttribute('aria-expanded', String(open));
+    if (toggle.classList.contains('mobile-menu-icon')) {
+      toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    }
+  });
+}
+mobileToggles.forEach(toggle => {
+  toggle.addEventListener('click', () => setNavigation(!navigation.classList.contains('visible')));
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && navigation.classList.contains('visible')) {
+    setNavigation(false);
+    Array.from(mobileToggles).find(toggle => toggle.getClientRects().length)?.focus();
+  }
 });
 
 const money = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' });
@@ -19,12 +33,12 @@ try {
 const dialog = document.querySelector('.cart-dialog');
 const items = dialog.querySelector('[data-cart-items]');
 const total = dialog.querySelector('[data-cart-total]');
-const count = document.querySelector('[data-cart-count]');
+const counts = document.querySelectorAll('[data-cart-count]');
 const toast = document.querySelector('.toast');
 let toastTimer;
 
 function renderCart() {
-  count.textContent = cart.length;
+  counts.forEach(count => { count.textContent = cart.length; });
   items.replaceChildren();
   if (!cart.length) {
     const empty = document.createElement('p');
@@ -66,7 +80,20 @@ function addToCart(name, price) {
   toastTimer = setTimeout(() => toast.classList.remove('visible'), 2100);
 }
 renderCart();
-document.querySelector('.cart-toggle').addEventListener('click', () => dialog.showModal());
+document.querySelectorAll('.cart-toggle,[data-open-cart]').forEach(button => {
+  button.addEventListener('click', () => { if (!dialog.open) dialog.showModal(); });
+});
+document.querySelectorAll('.mobile-size-options').forEach(group => {
+  const select = group.previousElementSibling.querySelector('select');
+  const choices = group.querySelectorAll('button');
+  select.addEventListener('change', () => {
+    choices.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.mobileSize === select.value)));
+  });
+  choices.forEach(button => button.addEventListener('click', () => {
+    select.value = button.dataset.mobileSize;
+    select.dispatchEvent(new Event('change'));
+  }));
+});
 dialog.querySelector('.close-cart').addEventListener('click', () => dialog.close());
 document.querySelectorAll('[data-add]').forEach(button => {
   button.addEventListener('click', () => {
@@ -134,7 +161,7 @@ if (slideButtons.length) {
   const cta = hero.querySelector('.actions a');
   const badge = hero.querySelector('.signature-badge');
   const slides = [
-    ['home', 'Not Your<br>Ordinary Pizza.', 'Bold flavours. Signature pizzas.<br>Made for Toronto.', 'menu.html', 'Order Online →'],
+    ['home', 'Not Your<br><em>Ordinary Pizza.</em>', 'Bold flavours. Signature pizzas.<br>Made for Toronto.', 'menu.html', 'Order Online →'],
     ['build', 'Create Your<br><em>Perfect Pizza</em>', 'Pick your size, crust, sauce and favourite toppings.', 'build.html', 'Start Building →'],
     ['wings', 'Bold Flavours.<br><em>Big Wings.</em>', 'Crispy, juicy wings tossed in our signature sauces.', 'wings.html', 'Order Wings →'],
   ];
