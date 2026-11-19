@@ -248,7 +248,42 @@ if (slideButtons.length) {
   });
   updateRotationControl();
 }
+document.querySelectorAll('[data-customize-classic]').forEach(link => {
+  const size = link.closest('.card').querySelector('.size-choice select');
+  size.addEventListener('change', () => {
+    const url = new URL(link.href);
+    url.searchParams.set('size', size.selectedIndex === 0 ? '14' : '16');
+    link.href = url.href;
+  });
+});
+
+function loadClassicPizza(form) {
+  if (form.dataset.config !== 'Custom Pizza' || typeof classicPizzas === 'undefined') return;
+  const params = new URLSearchParams(location.search);
+  const slug = params.get('classic');
+  if (!Object.prototype.hasOwnProperty.call(classicPizzas, slug)) return;
+  const pizza = classicPizzas[slug];
+  const sizes = Array.from(form.querySelectorAll('input[name="Size"]'));
+  sizes.forEach((size, index) => {
+    size.defaultChecked = index === (params.get('size') === '14' ? 0 : 1);
+    size.checked = size.defaultChecked;
+    size.dataset.cost = pizza.prices[index];
+    size.closest('label').querySelector('.choice-price').textContent = money.format(pizza.prices[index]);
+  });
+  form.querySelectorAll('input[name="Toppings"]').forEach(topping => {
+    topping.defaultChecked = pizza.toppings.includes(topping.value);
+    topping.checked = topping.defaultChecked;
+  });
+  form.dataset.config = pizza.name;
+  const summary = form.closest('.configure').querySelector('.config-summary');
+  const preview = summary.querySelector('img');
+  preview.src = 'media/classic-' + slug + '.webp';
+  preview.alt = pizza.name;
+  summary.querySelector('h2').textContent = pizza.name;
+}
+
 document.querySelectorAll('[data-config]').forEach(form => {
+  loadClassicPizza(form);
   const layout = form.closest('.configure');
   const summary = layout.querySelector('[data-selection]');
   const subtotal = layout.querySelector('[data-total]');
