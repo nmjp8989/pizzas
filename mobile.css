@@ -256,3 +256,9 @@
 @media (min-width:721px) {
  .mobile-only { display:none !important; }
 }
+
+@media (max-width:720px) {
+ .page-menu .pizza-categories { display:flex; flex-wrap:wrap; gap:.35rem; margin:.38rem 0 .42rem; }
+ .page-menu .pizza-categories a { border:1px solid #eae2dc; border-radius:999px; padding:.25rem .52rem; color:white; font-size:.76rem; font-weight:750; }
+ .page-menu .pizza-categories a[aria-current="page"] { border-color:#ef5606; background:#d94905; }
+}
