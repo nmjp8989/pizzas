@@ -368,3 +368,21 @@ body:not(.page-index):not(.page-menu) .mast-inner > p { display:none; }
   .choices-quantity,.choices-dip { --tiles:2; }
   .extras-panel { grid-template-columns:1fr 1fr; }
 }
+.builder-layout,.wing-order { display:grid; }
+.hero > img { mask-image:linear-gradient(90deg,transparent 0%,#000 19%); }
+.home-hero { --hero-art:60.55%; }
+.home-hero .signature-badge { left:44.7%; top:10%; width:clamp(95px,13vw,180px); }
+.hero-inner > * { animation-name:hero-rise; }
+@keyframes hero-rise { from { opacity:.75; transform:translateY(9px); } to { opacity:1; transform:none; } }
+.wing-flavours .card:nth-child(2) img { object-position:center 63%; }
+.wing-flavours .card h3 .reference-icon { order:-1; }
+.tile:has(input:disabled) { opacity:.55; cursor:not-allowed; }
+@media (min-width:860px) and (max-width:1000px) {
+  .navigation nav { gap:.42rem; }
+  .navigation .button { font-size:.88rem; padding-inline:.7rem; }
+}
+@media (max-width:420px) {
+  .rewards-join { padding:1rem .55rem; }
+  .rewards-join > img { display:none; }
+  .button { font-size:.9rem; padding-inline:.8rem; }
+}
