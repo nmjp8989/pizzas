@@ -161,17 +161,25 @@ if (slideButtons.length) {
   const cta = hero.querySelector('.actions a');
   const badge = hero.querySelector('.signature-badge');
   const slides = [
-    ['home', 'Not Your<br><em>Ordinary Pizza.</em>', 'Bold flavours. Signature pizzas.<br>Made for Toronto.', 'menu.html', 'Order Online →'],
+    ['home', 'Not Your<br>Ordinary <br class="mobile-only"><em>Pizza.</em>', 'Bold flavours. Signature pizzas.<br class="desktop-only"> Made for Toronto.', 'menu.html', 'Order Online →'],
     ['build', 'Create Your<br><em>Perfect Pizza</em>', 'Pick your size, crust, sauce and favourite toppings.', 'build.html', 'Start Building →'],
     ['wings', 'Bold Flavours.<br><em>Big Wings.</em>', 'Crispy, juicy wings tossed in our signature sauces.', 'wings.html', 'Order Wings →'],
   ];
+  const ctaLabel = cta.querySelector('.hero-cta-label');
+  const defaultCta = ctaLabel?.innerHTML;
   const ctaIcon = cta.querySelector('i');
   slideButtons.forEach(button => button.addEventListener('click', () => {
     const [asset, heading, description, href, label] = slides[Number(button.dataset.slide)];
     photo.src = 'media/' + asset + '-hero.webp?v=2';
     title.innerHTML = heading;
     copy.innerHTML = description;
-    cta.replaceChildren(label, ctaIcon);
+    if (ctaLabel && asset === 'home') {
+      ctaLabel.innerHTML = defaultCta;
+    } else if (ctaLabel) {
+      ctaLabel.textContent = label;
+    } else {
+      cta.replaceChildren(label, ctaIcon);
+    }
     cta.href = href;
     badge.hidden = asset !== 'home';
     slideButtons.forEach(dot => dot.setAttribute('aria-pressed', String(dot === button)));
