@@ -168,8 +168,17 @@ if (slideButtons.length) {
   const ctaLabel = cta.querySelector('.hero-cta-label');
   const defaultCta = ctaLabel?.innerHTML;
   const ctaIcon = cta.querySelector('i');
-  slideButtons.forEach(button => button.addEventListener('click', () => {
-    const [asset, heading, description, href, label] = slides[Number(button.dataset.slide)];
+  const rotation = hero.querySelector('.hero-rotation');
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  let activeSlide = 0;
+  let rotationTimer;
+  let paused = reducedMotion.matches;
+  let hovering = false;
+  let focused = false;
+
+  function showSlide(index) {
+    activeSlide = index;
+    const [asset, heading, description, href, label] = slides[index];
     photo.src = 'media/' + asset + '-hero.webp?v=2';
     title.innerHTML = heading;
     copy.innerHTML = description;
@@ -182,11 +191,62 @@ if (slideButtons.length) {
     }
     cta.href = href;
     badge.hidden = asset !== 'home';
-    slideButtons.forEach(dot => dot.setAttribute('aria-pressed', String(dot === button)));
-    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    slideButtons.forEach(dot => dot.setAttribute('aria-pressed', String(Number(dot.dataset.slide) === index)));
+    if (!reducedMotion.matches) {
       for (const element of [photo, title, copy]) element.animate([{ opacity: .48 }, { opacity: 1 }], 240);
     }
+  }
+
+  function scheduleRotation() {
+    clearTimeout(rotationTimer);
+    if (paused || hovering || focused || document.hidden) return;
+    rotationTimer = setTimeout(() => {
+      showSlide((activeSlide + 1) % slides.length);
+      scheduleRotation();
+    }, 6000);
+  }
+
+  function updateRotationControl() {
+    rotation?.setAttribute('aria-label', paused ? 'Play slideshow' : 'Pause slideshow');
+    if (rotation) rotation.firstElementChild.textContent = paused ? '▶' : 'Ⅱ';
+    scheduleRotation();
+  }
+
+  if (rotation) {
+    rotation.hidden = false;
+    rotation.addEventListener('click', () => {
+      paused = !paused;
+      updateRotationControl();
+    });
+  }
+  slideButtons.forEach(button => button.addEventListener('click', () => {
+    showSlide(Number(button.dataset.slide));
+    scheduleRotation();
   }));
+  hero.addEventListener('pointerenter', event => {
+    if (event.pointerType !== 'mouse') return;
+    hovering = true;
+    scheduleRotation();
+  });
+  hero.addEventListener('pointerleave', () => {
+    hovering = false;
+    scheduleRotation();
+  });
+  hero.addEventListener('focusin', event => {
+    focused = event.target.matches(':focus-visible') && event.target !== rotation;
+    scheduleRotation();
+  });
+  hero.addEventListener('focusout', event => {
+    if (hero.contains(event.relatedTarget)) return;
+    focused = false;
+    scheduleRotation();
+  });
+  document.addEventListener('visibilitychange', scheduleRotation);
+  reducedMotion.addEventListener('change', event => {
+    if (event.matches) paused = true;
+    updateRotationControl();
+  });
+  updateRotationControl();
 }
 document.querySelectorAll('[data-config]').forEach(form => {
   const layout = form.closest('.configure');

@@ -62,3 +62,21 @@
  body.page-index { padding-bottom:calc(clamp(42px,11.5vw,64px) + .7rem + env(safe-area-inset-bottom)); }
  .page-index .toast { bottom:calc(clamp(42px,11.5vw,64px) + 1.05rem + env(safe-area-inset-bottom)); }
 }
+
+.home-hero .hero-dots .hero-rotation {
+ display:grid;
+ place-items:center;
+ align-self:center;
+ width:1.6rem;
+ height:1.6rem;
+ color:white;
+ background:#1c1410;
+ border:1px solid #ffffff99;
+ font-size:.73rem;
+ line-height:1;
+}
+.home-hero .hero-dots { align-items:center; }
+@media (max-width:720px) {
+ .page-index .home-hero .hero-dots .hero-rotation { width:1.28rem; height:1.28rem; }
+ .page-index .home-hero .hero-inner { padding-bottom:1rem; }
+}
