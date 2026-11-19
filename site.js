@@ -139,7 +139,7 @@ if (slideButtons.length) {
   const ctaIcon = cta.querySelector('i');
   slideButtons.forEach(button => button.addEventListener('click', () => {
     const [asset, heading, description, href, label] = slides[Number(button.dataset.slide)];
-    photo.src = 'media/' + asset + '-hero.webp';
+    photo.src = 'media/' + asset + '-hero.webp?v=2';
     title.innerHTML = heading;
     copy.innerHTML = description;
     cta.replaceChildren(label, ctaIcon);
